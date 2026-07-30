@@ -1,0 +1,6 @@
+{
+  "name": "Thinesh Bake House",
+  "description": "An interactive bakery website with menu browsing, location details, customizable cakes, and cart functionality for Thinesh Bake House.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

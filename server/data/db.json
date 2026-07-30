@@ -1,0 +1,386 @@
+{
+  "products": [
+    {
+      "id": "tbh-001",
+      "sku": "TBH-CAKE-001",
+      "name": "Classic Chocolate Fudge Cake",
+      "slug": "classic-chocolate-fudge-cake",
+      "category": "Cakes",
+      "categories": [
+        "Cakes",
+        "Celebration Cakes"
+      ],
+      "shortDescription": "Decadent multi-layered rich dark chocolate cake with velvety ganache icing.",
+      "description": "Handcrafted using premium Ceylon cocoa powder, real creamery butter, and luscious dark chocolate ganache layers. Perfect for birthdays, anniversaries, and high tea.",
+      "priceMin": 2800,
+      "regularPrice": 3200,
+      "salePrice": 2800,
+      "onSale": true,
+      "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=800",
+        "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?auto=format&fit=crop&q=80&w=800"
+      ],
+      "tags": [
+        "Chocolate",
+        "Bestseller",
+        "Cake"
+      ],
+      "isCustomizable": true,
+      "cakeTypes": [
+        "Ribbon Sponge",
+        "Chocolate Fudge",
+        "Red Velvet"
+      ],
+      "weights": [
+        "1.0 kg (2.2 lbs)",
+        "1.5 kg (3.3 lbs)",
+        "2.0 kg (4.4 lbs)"
+      ],
+      "isFeatured": true,
+      "isFastMoving": true,
+      "stockQuantity": 15,
+      "stockStatus": "in_stock",
+      "seo": {
+        "metaTitle": "Buy Classic Chocolate Fudge Cake - Thinesh Bake House",
+        "metaDescription": "Freshly baked rich chocolate fudge cake in Sri Lanka with quick branch pickup."
+      }
+    },
+    {
+      "id": "tbh-002",
+      "sku": "TBH-PUFF-002",
+      "name": "Ceylon Spicy Egg & Fish Puff",
+      "slug": "ceylon-spicy-egg-fish-puff",
+      "category": "Savouries",
+      "categories": [
+        "Savouries",
+        "Hot Bakes"
+      ],
+      "shortDescription": "Flaky golden puff pastry filled with spiced mackerel fish and hard-boiled egg.",
+      "description": "Oven-fresh puff pastry folded around authentic Sri Lankan roasted curry spices, caramelized onions, fresh curry leaves, and a halved farm egg.",
+      "priceMin": 180,
+      "regularPrice": 180,
+      "image": "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=800",
+      "tags": [
+        "Spicy",
+        "Savory",
+        "Pastry"
+      ],
+      "isCustomizable": false,
+      "isFeatured": true,
+      "isFastMoving": true,
+      "stockQuantity": 45,
+      "stockStatus": "in_stock",
+      "seo": {
+        "metaTitle": "Ceylon Spicy Egg & Fish Puff - Thinesh Bake House",
+        "metaDescription": "Hot and flaky spicy fish & egg puff pastry baked fresh hourly."
+      }
+    },
+    {
+      "id": "tbh-003",
+      "sku": "TBH-BREAD-003",
+      "name": "Traditional Soft Milk Roast Paan",
+      "slug": "traditional-soft-milk-roast-paan",
+      "category": "Breads",
+      "categories": [
+        "Breads"
+      ],
+      "shortDescription": "Classic Sri Lankan flat roast bread with crispy crust and fluffy interior.",
+      "description": "Crispy on the outside, tender on the inside. Baked in traditional wood-fired deck ovens every morning at 5:00 AM.",
+      "priceMin": 140,
+      "regularPrice": 140,
+      "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=800",
+      "tags": [
+        "Bread",
+        "Fresh Oven",
+        "Breakfast"
+      ],
+      "isCustomizable": false,
+      "isFeatured": false,
+      "isFastMoving": true,
+      "stockQuantity": 4,
+      "stockStatus": "low_stock"
+    },
+    {
+      "id": "tbh-004",
+      "sku": "TBH-CAKE-004",
+      "name": "Romance Pink Heart Cake",
+      "slug": "romance-pink-heart-cake",
+      "category": "Cakes",
+      "categories": [
+        "Cakes",
+        "Celebration Cakes"
+      ],
+      "shortDescription": "Elegant heart-shaped vanilla cake topped with fresh strawberry macarons.",
+      "description": "Whipped pink buttercream frosting, vanilla bean butter sponge, and handcrafted white chocolate details.",
+      "priceMin": 3500,
+      "regularPrice": 3800,
+      "salePrice": 3500,
+      "onSale": true,
+      "image": "https://images.unsplash.com/photo-1535141192574-5d4897c13136?auto=format&fit=crop&q=80&w=800",
+      "tags": [
+        "Romance",
+        "Heart Cake",
+        "Strawberry"
+      ],
+      "isCustomizable": true,
+      "cakeTypes": [
+        "Butter Sponge",
+        "Vanilla Caramel"
+      ],
+      "weights": [
+        "1.0 kg (2.2 lbs)",
+        "1.5 kg (3.3 lbs)"
+      ],
+      "isFeatured": true,
+      "isFastMoving": false,
+      "stockQuantity": 8,
+      "stockStatus": "in_stock"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-cakes",
+      "name": "Cakes",
+      "slug": "cakes",
+      "description": "Decadent celebration cakes, birthday cakes, and custom wedding bakes.",
+      "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600",
+      "count": 12,
+      "isFeatured": true,
+      "seo": {
+        "metaTitle": "Fresh Cakes - Thinesh Bake House",
+        "metaDescription": "Order custom celebration cakes online."
+      }
+    },
+    {
+      "id": "cat-savouries",
+      "name": "Savouries",
+      "slug": "savouries",
+      "description": "Golden flaky puffs, rolls, rolls, and hot spicy oven snacks.",
+      "image": "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=600",
+      "count": 18,
+      "isFeatured": true,
+      "seo": {
+        "metaTitle": "Hot Bakery Savouries - Thinesh Bake House"
+      }
+    },
+    {
+      "id": "cat-breads",
+      "name": "Breads",
+      "slug": "breads",
+      "description": "Daily baked roast paan, sandwich bread, rolls, and sweet buns.",
+      "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=600",
+      "count": 9,
+      "isFeatured": true
+    }
+  ],
+  "sliders": [
+    {
+      "id": "slide-1",
+      "sub": "Weddings & Birthdays",
+      "title": "CAKES THAT",
+      "highlight": "CAPTIVATE",
+      "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=1600",
+      "btnText": "Explore Cakes",
+      "targetLink": "menu",
+      "isActive": true,
+      "order": 1
+    },
+    {
+      "id": "slide-2",
+      "sub": "Freshly Oven Baked",
+      "title": "SWEETNESS IN",
+      "highlight": "EVERY BITE",
+      "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?auto=format&fit=crop&q=80&w=1600",
+      "btnText": "Order Online",
+      "targetLink": "menu",
+      "isActive": true,
+      "order": 2
+    },
+    {
+      "id": "slide-3",
+      "sub": "Flaky & Golden Pastries",
+      "title": "SAVOURY PUFFS",
+      "highlight": "AND BUNS",
+      "image": "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=1600",
+      "btnText": "Browse Savouries",
+      "targetLink": "menu",
+      "isActive": true,
+      "order": 3
+    }
+  ],
+  "generalSettings": {
+    "storeName": "Thinesh Bake House",
+    "storeTagline": "Authentic Oven Fresh Bakery & Celebration Cakes",
+    "storeEmail": "contact@thineshbakehouse.lk",
+    "storePhone": "+94 21 221 2525",
+    "storeAddress": "Palaly Road, Thirunvely, Jaffna / Wellawatte, Colombo 06",
+    "currencySymbol": "Rs.",
+    "maintenanceMode": false,
+    "logoUrl": "",
+    "taxRatePercent": 5,
+    "flatShippingFee": 250,
+    "freeShippingThreshold": 5000
+  },
+  "emailSettings": {
+    "senderName": "Thinesh Bake House Orders",
+    "senderEmail": "orders@thineshbakehouse.lk",
+    "smtpHost": "mail.thineshbakehouse.lk",
+    "smtpPort": 587,
+    "smtpUser": "orders@thineshbakehouse.lk",
+    "adminNotificationEmail": "admin@thineshbakehouse.lk",
+    "enableOrderConfirmations": true,
+    "orderConfirmSubject": "Your Thinesh Bake House Order Confirmation - #{orderNumber}"
+  },
+  "smsSettings": {
+    "provider": "simulator",
+    "accountSid": "AC_demo_twilio_sid",
+    "authToken": "auth_demo_token",
+    "senderId": "THINESHBAKE",
+    "notifyOnNewOrder": true,
+    "notifyOnStatusChange": true,
+    "adminAlertPhone": "+94771234567"
+  },
+  "coupons": [
+    {
+      "id": "c-101",
+      "code": "CELEBRATE10",
+      "type": "percentage",
+      "value": 10,
+      "minSpend": 2000,
+      "isActive": true,
+      "usageLimit": 100,
+      "usageCount": 14
+    },
+    {
+      "id": "c-102",
+      "code": "WELCOME500",
+      "type": "fixed_cart",
+      "value": 500,
+      "minSpend": 3000,
+      "isActive": true,
+      "usageLimit": 50,
+      "usageCount": 8
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev-1",
+      "productId": "tbh-001",
+      "productName": "Classic Chocolate Fudge Cake",
+      "author": "Kavitha S.",
+      "rating": 5,
+      "date": "2026-07-28",
+      "comment": "The chocolate fudge cake was incredibly moist and delicious! Delivered right on time for my birthday party in Jaffna.",
+      "isVerified": true,
+      "status": "approved",
+      "adminReply": "Thank you Kavitha! We are thrilled you loved your birthday cake!"
+    },
+    {
+      "id": "rev-2",
+      "productId": "tbh-002",
+      "productName": "Ceylon Spicy Egg & Fish Puff",
+      "author": "Rohan De Silva",
+      "rating": 5,
+      "date": "2026-07-29",
+      "comment": "Best spicy fish puff in Wellawatte. Golden flaky crust and full egg inside!",
+      "isVerified": true,
+      "status": "approved"
+    }
+  ],
+  "users": [
+    {
+      "id": "u-admin",
+      "name": "Thinesh Administrator",
+      "email": "admin@thinesh.lk",
+      "role": "administrator",
+      "phone": "+94 77 999 1111"
+    },
+    {
+      "id": "u-manager",
+      "name": "Branch Manager (Jaffna)",
+      "email": "manager@thinesh.lk",
+      "role": "shop_manager",
+      "phone": "+94 77 888 2222"
+    },
+    {
+      "id": "u-buyer",
+      "name": "Ananthan Perera",
+      "email": "buyer@thinesh.lk",
+      "role": "customer",
+      "phone": "+94 77 123 4567",
+      "shippingAddress": {
+        "fullName": "Ananthan Perera",
+        "phone": "+94 77 123 4567",
+        "street": "45 Ramakrishna Road, Wellawatte",
+        "city": "Colombo 06",
+        "country": "Sri Lanka"
+      }
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-1001",
+      "orderNumber": "TBH-1001",
+      "customerName": "Ananthan Perera",
+      "customerEmail": "buyer@thinesh.lk",
+      "customerPhone": "+94 77 123 4567",
+      "pickupBranch": "Thirunvely Branch (Main Branch)",
+      "items": [
+        {
+          "id": "item-1",
+          "productId": "tbh-001",
+          "name": "Classic Chocolate Fudge Cake",
+          "price": 2800,
+          "quantity": 1,
+          "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=800",
+          "customizations": {
+            "weight": "1.0 kg (2.2 lbs)",
+            "message": "Happy Birthday Ananthan!"
+          }
+        }
+      ],
+      "subtotal": 2800,
+      "tax": 140,
+      "shippingFee": 0,
+      "discountAmount": 0,
+      "total": 2940,
+      "paymentMethod": "cod",
+      "paymentStatus": "paid",
+      "status": "ready_for_pickup",
+      "orderNotes": "Please pack with a candle set.",
+      "createdAt": "2026-07-29T09:06:09.034Z",
+      "updatedAt": "2026-07-30T09:06:09.035Z",
+      "trackingHistory": [
+        {
+          "status": "pending_payment",
+          "label": "Order Placed & Confirmed",
+          "timestamp": "2026-07-29T09:06:09.035Z",
+          "completed": true
+        },
+        {
+          "status": "processing",
+          "label": "Oven Preparation & Baking",
+          "timestamp": "2026-07-29T21:06:09.035Z",
+          "completed": true
+        },
+        {
+          "status": "ready_for_pickup",
+          "label": "Ready for Branch Pickup",
+          "timestamp": "2026-07-30T07:06:09.035Z",
+          "completed": true
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "id": "log-1",
+      "timestamp": "2026-07-30T09:06:09.035Z",
+      "user": "System",
+      "action": "Server Initialized",
+      "details": "Thinesh Bake House database engine loaded successfully.",
+      "type": "info"
+    }
+  ]
+}
