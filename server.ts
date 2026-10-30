@@ -17,6 +17,19 @@ const app = express();
 async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
+  // Baseline security headers for every response; the site is only served over HTTPS (Cloudflare).
+  app.disable('x-powered-by');
+  app.use((req, res, next) => {
+    res.set({
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+    });
+    next();
+  });
+
   // Increase payload limit for Base64 image uploads
   app.use(express.json({ limit: '25mb' }));
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));

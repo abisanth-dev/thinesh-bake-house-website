@@ -1,6 +1,7 @@
 # Builds the site and publishes it to the `deploy` branch, which the cPanel server (tbhweb, tbh.lk)
 # checks out and runs with Passenger. The server account can't run `npm install` (shell limits), so
-# the server is bundled with all its packages into one file here. scripts/cpanel-update.sh, run by a
+# the server is bundled with all its packages into one file here, kept outside dist/ (which is served
+# publicly). scripts/cpanel-update.sh, run by a
 # cPanel cron job, pulls each new build and restarts the app.
 name: Deploy to cPanel
 
@@ -36,7 +37,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Bundle server with its dependencies
-        run: npx esbuild server.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/server.cjs
+        run: npx esbuild server.ts --bundle --platform=node --target=node22 --format=cjs --outfile=out/server.cjs
 
       - name: Assemble deploy folder
         run: |
@@ -44,7 +45,7 @@ jobs:
           cp -r dist out/
           cp scripts/cpanel-update.sh out/update.sh
           printf '{ "name": "tbh-app", "private": true }\n' > out/package.json
-          printf "require('./dist/server.cjs');\n" > out/app.js
+          printf "require('./server.cjs');\n" > out/app.js
           printf '.env\ntmp/\nupdate.log\n' > out/.gitignore
 
       - name: Publish to deploy branch
