@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Menu, X, Phone, User as UserIcon, Shield, PackageSearch, Heart } from 'lucide-react';
+import { ShoppingBag, Menu, X, User as UserIcon, Search, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Logo from './Logo';
 import { User } from '../types';
+import { useSiteSettings } from './SiteSettingsContext';
+import { isPageEnabled } from '../sitePages';
 
 interface HeaderProps {
   activeTab: string;
@@ -13,7 +15,6 @@ interface HeaderProps {
   onOpenAuthModal: () => void;
   onOpenCustomerAccount: () => void;
   onOpenTrackingModal: () => void;
-  wishlistCount: number;
 }
 
 export default function Header({
@@ -25,16 +26,18 @@ export default function Header({
   onOpenAuthModal,
   onOpenCustomerAccount,
   onOpenTrackingModal,
-  wishlistCount,
 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const settings = useSiteSettings();
 
   const navItems = [
     { id: 'home', label: 'Home' },
     { id: 'menu', label: 'Menu' },
     { id: 'promotions', label: 'Promotions' },
     { id: 'branches', label: 'Our Branches' }
-  ];
+  ].filter(item => isPageEnabled(item.id, settings.pages));
+  const trackOrderEnabled = settings.pages.trackOrderEnabled;
 
   const handleNavClick = (id: string) => {
     setActiveTab(id);
@@ -42,12 +45,13 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white shadow-xs backdrop-blur-md bg-white/95">
+    <header className={`${settings.header.sticky ? 'sticky top-0' : 'relative'} z-40 w-full border-b border-gray-100 bg-white shadow-xs backdrop-blur-md bg-white/95`}>
+      {settings.header.announcementEnabled && settings.header.announcementText && <div className="bg-brand-blue px-4 py-2 text-center text-xs font-bold tracking-wide text-white">{settings.header.announcementText}</div>}
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Logo */}
         <div onClick={() => setActiveTab('home')} className="cursor-pointer">
-          <Logo />
+          <Logo className="h-auto" size={settings.header.logoSize} />
         </div>
 
         {/* Desktop Nav */}
@@ -72,55 +76,31 @@ export default function Header({
           ))}
 
           {/* Track Order Direct Navigation Link */}
-          <button
+          {trackOrderEnabled && <button
             onClick={onOpenTrackingModal}
-            className="flex items-center gap-1.5 py-2 text-[14px] font-semibold text-amber-700 hover:text-brand-gold transition-colors cursor-pointer"
+            className="relative py-2 text-[14px] font-medium text-gray-600 hover:text-brand-blue transition-colors cursor-pointer"
           >
-            <PackageSearch className="w-4 h-4 text-brand-gold" />
             <span>Track Order</span>
-          </button>
+          </button>}
         </nav>
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {settings.header.searchEnabled && <form onSubmit={e => { e.preventDefault(); if (searchQuery.trim()) setActiveTab('menu'); }} className="hidden items-center rounded-xl border border-stone-200 bg-stone-50 px-2 lg:flex"><Search className="h-4 w-4 text-stone-400" /><input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search products" className="w-32 bg-transparent px-2 py-2 text-xs outline-none xl:w-44" /></form>}
           
           {/* Customer Account / Sign In */}
-          <button
+          {settings.header.accountEnabled && <button
             onClick={user ? onOpenCustomerAccount : onOpenAuthModal}
             className="flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200/60 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-amber-100 transition-all cursor-pointer"
           >
             <UserIcon className="w-3.5 h-3.5 text-brand-gold" />
             <span>{user ? user.name.split(' ')[0] : 'Sign In'}</span>
-          </button>
+          </button>}
 
-          {/* Admin Panel Link (full page, real Supabase Auth login) */}
-          <a
-            href="/admin"
-            className="hidden sm:flex items-center gap-1.5 bg-stone-900 text-amber-300 border border-stone-800 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:bg-stone-800 transition-all cursor-pointer"
-            title="Admin Login"
-          >
-            <Shield className="w-3.5 h-3.5 text-brand-gold" />
-            <span>Admin</span>
-          </a>
-
-          {/* Saved Wishlist Button */}
-          {user && (
-            <button
-              onClick={onOpenCustomerAccount}
-              className="relative p-2 rounded-full hover:bg-rose-50 transition-colors cursor-pointer text-rose-500"
-              title="View Wishlist"
-            >
-              <Heart className="h-5.5 w-5.5" />
-              {wishlistCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs">
-                  {wishlistCount}
-                </span>
-              )}
-            </button>
-          )}
+          {settings.header.wishlistEnabled && <button type="button" onClick={user ? onOpenCustomerAccount : onOpenAuthModal} aria-label="Open wishlist" className="rounded-full p-2.5 text-brand-gold transition hover:bg-amber-50"><Heart className="h-5 w-5" /></button>}
 
           {/* Cart Icon */}
-          <button
+          {settings.header.cartEnabled && <button
             onClick={onCartClick}
             className="relative p-2.5 rounded-full hover:bg-gray-50 transition-colors group cursor-pointer"
             id="header-cart-btn"
@@ -139,7 +119,7 @@ export default function Header({
                 </motion.span>
               )}
             </AnimatePresence>
-          </button>
+          </button>}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -177,13 +157,12 @@ export default function Header({
                 </button>
               ))}
 
-              <button
+              {trackOrderEnabled && <button
                 onClick={() => { onOpenTrackingModal(); setIsMobileMenuOpen(false); }}
-                className="flex w-full items-center py-3 px-4 rounded-lg text-base font-semibold text-amber-800 bg-amber-50"
+                className="flex w-full items-center py-3 px-4 rounded-lg text-left text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-brand-blue transition-colors"
               >
-                <PackageSearch className="w-5 h-5 text-brand-gold mr-2" />
                 Track Order Status
-              </button>
+              </button>}
             </div>
           </motion.div>
         )}

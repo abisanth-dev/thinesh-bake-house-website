@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Phone, Clock, Compass, Copy, Check, Star } from 'lucide-react';
+import { MapPin, Phone, Clock, Compass } from 'lucide-react';
 import { BRANCHES } from '../data';
 import { Branch } from '../types';
 
 export default function BranchesSection() {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(BRANCHES[0]);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const handleCopyAddress = (branch: Branch, e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(branch.address);
-    setCopiedId(branch.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
 
   return (
     <div className="py-12 bg-white">
@@ -32,72 +24,42 @@ export default function BranchesSection() {
         {/* Layout split: Left Side Branch List, Right Side Active Branch map & details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Grid: Branches List (10 cols or 7 cols) */}
+          {/* Left: Branches list, one row per branch */}
           <div className="lg:col-span-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-4">
               {BRANCHES.map((branch) => (
                 <motion.div
                   key={branch.id}
-                  whileHover={{ y: -4 }}
-                  className={`bg-white rounded-2xl border-2 overflow-hidden shadow-md transition-all cursor-pointer flex flex-col ${
+                  whileHover={{ x: 4 }}
+                  className={`bg-white rounded-2xl border-2 overflow-hidden shadow-sm transition-all cursor-pointer flex items-stretch ${
                     selectedBranch?.id === branch.id
-                      ? 'border-[#0B1354] ring-2 ring-[#0B1354]/10 scale-102'
-                      : 'border-gray-150/80 hover:border-brand-gold/50'
+                      ? 'border-[#0B1354] ring-2 ring-[#0B1354]/10'
+                      : 'border-gray-200 hover:border-brand-gold/50'
                   }`}
                   onClick={() => setSelectedBranch(branch)}
                 >
-                  {/* Image wrapper */}
-                  <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
-                    <img
-                      src={branch.image}
-                      alt={branch.name}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                    {selectedBranch?.id === branch.id && (
-                      <div className="absolute top-2.5 left-2.5 bg-[#0B1354] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
-                        Active Selection
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Text Contents exactly matching image structure */}
-                  <div className="p-4 flex-grow flex flex-col justify-between items-center text-center">
-                    <div>
-                      <h3 className="font-extrabold text-[16px] text-[#0B1354] font-display uppercase tracking-tight mb-2.5">
+                  {/* Name, address and phone on one line (wraps on small screens) */}
+                  <div className="px-4 py-3.5 sm:px-5 flex-grow min-w-0 flex flex-wrap items-center gap-x-6 gap-y-1.5">
+                    <div className="flex items-center gap-2 sm:w-64 shrink-0">
+                      <h3 className="font-extrabold text-[15px] text-[#0B1354] font-display uppercase tracking-tight whitespace-nowrap">
                         {branch.name}
                       </h3>
-
-                      {/* Address */}
-                      <div className="flex items-center justify-center gap-1.5 text-[12px] text-gray-500 mb-1.5 font-medium">
-                        <MapPin className="h-3.5 w-3.5 text-[#0B1354] flex-shrink-0" />
-                        <span className="line-clamp-1">{branch.address}</span>
-                      </div>
-
-                      {/* Phone Call text */}
-                      <div className="flex items-center justify-center gap-1.5 text-[12px] text-gray-500 font-semibold font-mono">
-                        <Phone className="h-3.5 w-3.5 text-[#0B1354] flex-shrink-0" />
-                        <span>{branch.phone}</span>
-                      </div>
+                      {selectedBranch?.id === branch.id && (
+                        <span className="bg-[#0B1354] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
+                          Selected
+                        </span>
+                      )}
                     </div>
 
-                    {/* Copy details or select shortcut */}
-                    <button
-                      onClick={(e) => handleCopyAddress(branch, e)}
-                      className="mt-4 text-[11px] font-bold text-[#0B1354] hover:text-brand-gold flex items-center gap-1 transition-colors uppercase tracking-wider"
-                    >
-                      {copiedId === branch.id ? (
-                        <>
-                          <Check className="h-3 w-3 text-emerald-500" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3 w-3" />
-                          <span>Copy Address</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium min-w-0">
+                      <MapPin className="h-3.5 w-3.5 text-[#0B1354] flex-shrink-0" />
+                      <span>{branch.address}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[12px] text-gray-500 font-semibold font-mono whitespace-nowrap sm:ml-auto">
+                      <Phone className="h-3.5 w-3.5 text-[#0B1354] flex-shrink-0" />
+                      <span>{branch.phone}</span>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -105,7 +67,7 @@ export default function BranchesSection() {
           </div>
 
           {/* Right Area: Interactive Detail & Simulated Maps */}
-          <div className="lg:col-span-4 bg-gray-50 border border-gray-150 rounded-2xl p-6 shadow-sm sticky top-24">
+          <div className="lg:col-span-4 bg-gray-50 border border-gray-200 rounded-2xl p-6 shadow-sm sticky top-24">
             <AnimatePresence mode="wait">
               {selectedBranch ? (
                 <motion.div
@@ -177,7 +139,7 @@ export default function BranchesSection() {
                       </text>
                     </svg>
 
-                    <div className="absolute bottom-2.5 right-2.5 bg-white/90 backdrop-blur-xs text-[10px] font-mono py-1 px-2 rounded-md shadow-xs text-gray-500 border border-gray-250">
+                    <div className="absolute bottom-2.5 right-2.5 bg-white/90 backdrop-blur-xs text-[10px] font-mono py-1 px-2 rounded-md shadow-xs text-gray-500 border border-gray-200">
                       GPS: Jaffna, Sri Lanka
                     </div>
                   </div>

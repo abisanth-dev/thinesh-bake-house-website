@@ -1,20 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, SlidersHorizontal, ArrowLeft, ArrowRight, Heart } from 'lucide-react';
-import { Product } from '../types';
+import { Search, SlidersHorizontal, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Category, MenuGroup, Product } from '../types';
 import { PRODUCTS } from '../data';
+import { useSiteSettings } from './SiteSettingsContext';
+import { MENU_GROUPS, enabledMenuGroups, groupOf } from '../menuGroups';
+import ComboCard from './ComboCard';
+import ProductCard from './ProductCard';
 
 interface MenuSectionProps {
   onProductClick: (product: Product) => void;
   onAddToCartDirectly: (product: Product) => void;
   products?: Product[];
-  categories?: string[];
+  categories?: Category[];
   isLiveSyncActive?: boolean;
   onOpenWooCommerceModal?: () => void;
+  initialCategory?: string;
+  initialGroup?: MenuGroup;
 }
 
 const DEFAULT_CATEGORIES = ['Cakes', 'Buns', 'Doughnuts', 'Piece Cake', 'Savories', 'Sweets'];
-const ITEMS_PER_PAGE = 10;
 
 function ProductSkeleton() {
   return (
@@ -55,39 +60,73 @@ export default function MenuSection({
   categories: propCategories,
   isLiveSyncActive,
   onOpenWooCommerceModal,
+  initialCategory,
+  initialGroup,
 }: MenuSectionProps) {
+  const settings = useSiteSettings();
+  const itemsPerPage = Math.max(1, settings.store.productsPerPage);
   const activeProducts = propProducts && propProducts.length > 0 ? propProducts : PRODUCTS;
-  
-  // Extract unique categories dynamically from products or propCategories
-  const categoriesList = useMemo(() => {
-    if (propCategories && propCategories.length > 0) {
-      return propCategories;
-    }
-    if (propProducts && propProducts.length > 0) {
-      const extracted = Array.from(new Set(propProducts.map(p => p.category))).filter(Boolean);
-      if (extracted.length > 0) return extracted;
-    }
-    return DEFAULT_CATEGORIES;
-  }, [propCategories, propProducts]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [requestedGroup, setSelectedGroup] = useState<MenuGroup>(initialGroup || 'bakery');
+  // Tabs switched off in admin are skipped; a request for one lands on the first tab still on.
+  const visibleGroups = enabledMenuGroups(settings.store);
+  const selectedGroup = visibleGroups.some(group => group.id === requestedGroup) ? requestedGroup : (visibleGroups[0]?.id ?? requestedGroup);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory || 'All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Filter products based on category and search query
+  const activeGroup = MENU_GROUPS.find(group => group.id === selectedGroup) || MENU_GROUPS[0];
+
+  const groupProducts = useMemo(
+    () => visibleGroups.length === 0 ? [] : activeProducts.filter(product => groupOf(product) === selectedGroup),
+    [activeProducts, selectedGroup, visibleGroups.length]
+  );
+
+  // Sub-category tabs come from the admin categories assigned to this group, and fall back
+  // to whatever categories the group's products actually use.
+  const categoriesList = useMemo(() => {
+    const assigned = (propCategories || [])
+      .filter(category => (category.menuGroup || 'bakery') === selectedGroup)
+      .map(category => category.name);
+    const used = Array.from(new Set(groupProducts.map(product => product.category).filter(Boolean)));
+    const merged = Array.from(new Set([...assigned.filter(name => used.includes(name)), ...used]));
+    if (merged.length > 0) return merged;
+    return selectedGroup === 'bakery' && !propProducts?.length ? DEFAULT_CATEGORIES : assigned;
+  }, [propCategories, propProducts, groupProducts, selectedGroup]);
+
+  React.useEffect(() => {
+    if (!initialCategory) return;
+    setSelectedCategory(initialCategory);
+    // Jump to the tab that owns the requested category so deep links from the home page land correctly.
+    const owningCategory = (propCategories || []).find(category => category.name === initialCategory);
+    const owningProduct = activeProducts.find(product => product.category === initialCategory);
+    const targetGroup = (owningCategory?.menuGroup || (owningProduct && groupOf(owningProduct))) as MenuGroup | undefined;
+    if (targetGroup) setSelectedGroup(targetGroup);
+  }, [initialCategory, propCategories?.length, activeProducts.length]);
+
+  // Major-category cards on the home page open the menu straight on their group.
+  React.useEffect(() => {
+    if (initialGroup) setSelectedGroup(initialGroup);
+  }, [initialGroup]);
+
+  // Reset the sub tab whenever the main tab changes and the old category no longer applies.
+  React.useEffect(() => {
+    setSelectedCategory(current => (current === 'All' || categoriesList.includes(current)) ? current : 'All');
+  }, [categoriesList]);
+
+  // Filter products based on group, category and search query
   const filteredProducts = useMemo(() => {
-    return activeProducts.filter((product) => {
+    return groupProducts.filter((product) => {
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeProducts, selectedCategory, searchQuery]);
+  }, [groupProducts, selectedCategory, searchQuery]);
 
   // Pagination calculation
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
   
   // Reset page and simulate a loading skeleton when filter changes
   React.useEffect(() => {
@@ -97,31 +136,19 @@ export default function MenuSection({
       setIsLoading(false);
     }, 550); // 550ms delay for high-fidelity loading effect
     return () => clearTimeout(timer);
-  }, [selectedCategory, searchQuery]);
+  }, [selectedGroup, selectedCategory, searchQuery]);
 
   const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
 
-  const toggleFavorite = (productId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavorites(prev => 
-      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
-    );
-  };
-
-  const formatPrice = (min: number, max?: number) => {
-    if (max) {
-      return `$${min.toFixed(2)} – $${max.toFixed(2)}`;
-    }
-    return `$${min.toFixed(2)}`;
-  };
+  const displayedProducts = paginatedProducts;
 
   return (
     <section className="py-12 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+
         {/* Search & Header Control Area */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 pb-6 border-b border-gray-100">
           <div>
@@ -169,34 +196,69 @@ export default function MenuSection({
           </div>
         </div>
 
-        {/* Categories Pills - styled exactly like screenshot */}
-        <div className="flex flex-wrap justify-center gap-3.5 mb-12">
-          {/* "All" button for easier exploration */}
-          <button
-            onClick={() => setSelectedCategory('All')}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer border ${
-              selectedCategory === 'All'
-                ? 'bg-[#343EAF] text-white border-[#343EAF] shadow-xs scale-102'
-                : 'bg-white text-[#343EAF] border-gray-200 hover:border-[#343EAF] hover:bg-gray-50'
-            }`}
-          >
-            All Items
-          </button>
+        {/* Main menu tabs — Bakery / Food / Combo. Hidden when admin leaves only one switched on. */}
+        <div className="mb-7" role="tablist" aria-label="Main menu">
+          {visibleGroups.length > 1 && <div className="mx-auto flex max-w-2xl flex-col gap-2 rounded-2xl border border-gray-150 bg-gray-50 p-1.5 sm:flex-row">
+            {visibleGroups.map((group) => {
+              const Icon = group.icon;
+              const isActive = selectedGroup === group.id;
+              return (
+                <button
+                  key={group.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => { setSelectedGroup(group.id); setSelectedCategory('All'); }}
+                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wide transition-colors duration-200 cursor-pointer ${
+                    isActive ? 'text-white' : 'text-brand-blue/70 hover:text-brand-blue hover:bg-white/70'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="menu-group-pill"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                      className="absolute inset-0 rounded-xl bg-brand-blue shadow-md"
+                    />
+                  )}
+                  <span className="relative flex items-center gap-2">
+                    <Icon className={`h-4 w-4 ${isActive ? 'text-brand-gold' : ''}`} />
+                    {group.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>}
+        </div>
 
-          {categoriesList.map((category) => (
+        {/* Sub category pills for the selected main tab */}
+        {categoriesList.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-3.5 mb-12">
+            {/* "All" button for easier exploration */}
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => setSelectedCategory('All')}
               className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer border ${
-                selectedCategory === category
+                selectedCategory === 'All'
                   ? 'bg-[#343EAF] text-white border-[#343EAF] shadow-xs scale-102'
                   : 'bg-white text-[#343EAF] border-gray-200 hover:border-[#343EAF] hover:bg-gray-50'
               }`}
             >
-              {category}
+              All {activeGroup.label.split(' ')[0]}
             </button>
-          ))}
-        </div>
+
+            {categoriesList.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer border ${
+                  selectedCategory === category
+                    ? 'bg-[#343EAF] text-white border-[#343EAF] shadow-xs scale-102'
+                    : 'bg-white text-[#343EAF] border-gray-200 hover:border-[#343EAF] hover:bg-gray-50'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Product Grid */}
         <AnimatePresence mode="popLayout">
@@ -206,33 +268,55 @@ export default function MenuSection({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8"
+              className={selectedGroup === 'combo' ? 'grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3' : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8'}
             >
-              {Array.from({ length: 10 }).map((_, idx) => (
+              {Array.from({ length: selectedGroup === 'combo' ? 3 : 10 }).map((_, idx) => (
                 <ProductSkeleton key={`skeleton-${idx}`} />
               ))}
             </motion.div>
-          ) : filteredProducts.length === 0 ? (
+          ) : displayedProducts.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200"
             >
-              <p className="text-gray-500 font-medium">No products found matching your criteria.</p>
-              <button
-                onClick={() => { setSelectedCategory('All'); setSearchQuery(''); }}
-                className="mt-4 text-brand-blue font-bold hover:underline text-sm cursor-pointer"
-              >
-                Clear all filters
-              </button>
+              <p className="text-gray-500 font-medium">
+                {groupProducts.length === 0
+                  ? `No ${activeGroup.label.toLowerCase()} are available right now. Please check back soon.`
+                  : 'No products found matching your criteria.'}
+              </p>
+              {groupProducts.length > 0 && (
+                <button
+                  onClick={() => { setSelectedCategory('All'); setSearchQuery(''); }}
+                  className="mt-4 text-brand-blue font-bold hover:underline text-sm cursor-pointer"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </motion.div>
+          ) : selectedGroup === 'combo' ? (
+            <motion.div layout className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+              {displayedProducts.map((product, index) => (
+                // Keyed on a wrapper because this project builds without @types/react, so `key`
+                // cannot be passed to a typed component directly. `contents` keeps the card
+                // itself as the grid item so every card stretches to the row height.
+                <div key={product.id} className="contents">
+                  <ComboCard
+                    product={product}
+                    index={index}
+                    onView={onProductClick}
+                    onAddToCart={onAddToCartDirectly}
+                  />
+                </div>
+              ))}
             </motion.div>
           ) : (
             <motion.div
               layout
               className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8"
             >
-              {paginatedProducts.map((product) => (
+              {displayedProducts.map((product) => (
                 <motion.div
                   layout
                   key={product.id}
@@ -240,70 +324,8 @@ export default function MenuSection({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
-                  className="group bg-white rounded-2xl border border-gray-150/80 p-5 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
-                  onClick={() => onProductClick(product)}
                 >
-                  
-                  {/* Card Thumbnail Container */}
-                  <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-gray-50 mb-4 flex items-center justify-center">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover transform group-hover:scale-108 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    
-                    {/* Floating Heart / Like Button */}
-                    <button
-                      onClick={(e) => toggleFavorite(product.id, e)}
-                      className="absolute top-2.5 right-2.5 h-8.5 w-8.5 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-xs hover:bg-white text-gray-400 hover:text-rose-500 hover:scale-110 shadow-xs transition-all cursor-pointer"
-                      aria-label="Add to wishlist"
-                    >
-                      <Heart className={`h-4.5 w-4.5 ${favorites.includes(product.id) ? 'fill-rose-500 text-rose-500' : 'text-gray-500'}`} />
-                    </button>
-
-                    {/* Category Label */}
-                    <span className="absolute bottom-2.5 left-2.5 bg-brand-blue/80 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
-                      {product.category}
-                    </span>
-                  </div>
-
-                  {/* Product Details Section */}
-                  <div className="flex flex-col items-center text-center flex-grow">
-                    <h3 className="font-bold text-[15px] leading-snug text-gray-900 group-hover:text-[#343EAF] transition-colors font-display uppercase tracking-tight min-h-[44px] flex items-center justify-center">
-                      {product.name}
-                    </h3>
-                    
-                    {/* Optional small description */}
-                    {product.description && (
-                      <p className="text-xs text-gray-400 mt-1 mb-2.5 line-clamp-2 max-w-[180px]">
-                        {product.description}
-                      </p>
-                    )}
-                    
-                    {/* Price - bold style */}
-                    <p className="text-[#343EAF] font-bold text-[14px] mt-auto font-mono">
-                      {formatPrice(product.priceMin, product.priceMax)}
-                    </p>
-                  </div>
-
-                  {/* Add To Cart button styled exactly like screenshot */}
-                  <div className="mt-4">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (product.isCustomizable) {
-                          onProductClick(product); // Open customization modal
-                        } else {
-                          onAddToCartDirectly(product);
-                        }
-                      }}
-                      className="w-full py-2.5 bg-[#343EAF] hover:bg-[#252E90] text-white text-[13px] font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-98 cursor-pointer uppercase tracking-wider"
-                    >
-                      Add To Cart
-                    </button>
-                  </div>
-
+                  <ProductCard product={product} onProductClick={onProductClick} onAddToCartDirectly={onAddToCartDirectly} />
                 </motion.div>
               ))}
             </motion.div>

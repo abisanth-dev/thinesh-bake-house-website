@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, ChevronLeft, ChevronRight, Quote, MessageSquareHeart } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, Quote, MessageSquareHeart, MapPin, ShieldCheck } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -77,180 +77,115 @@ const REVIEWS: Review[] = [
 ];
 
 export default function CustomerReviews() {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeReview = REVIEWS[activeIndex];
 
-  // Check scroll positions to show/hide/disable controls dynamically
-  const checkScrollPosition = () => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      setCanScrollLeft(el.scrollLeft > 5);
-      setCanScrollRight(
-        el.scrollLeft < el.scrollWidth - el.clientWidth - 5
-      );
-    }
-  };
-
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      el.addEventListener('scroll', checkScrollPosition);
-      // Run once on load/resize
-      checkScrollPosition();
-      window.addEventListener('resize', checkScrollPosition);
-    }
-    return () => {
-      if (el) el.removeEventListener('scroll', checkScrollPosition);
-      window.removeEventListener('resize', checkScrollPosition);
-    };
-  }, []);
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      const scrollAmount = el.clientWidth * 0.75;
-      el.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
+  const showPrevious = () => setActiveIndex(index => (index - 1 + REVIEWS.length) % REVIEWS.length);
+  const showNext = () => setActiveIndex(index => (index + 1) % REVIEWS.length);
 
   return (
-    <section className="py-16 bg-[#FDFBF7] border-b border-gray-100 relative overflow-hidden">
-      {/* Decorative background vectors */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl pointer-events-none" />
+    <section className="relative overflow-hidden bg-brand-blue py-16 text-white sm:py-24" aria-labelledby="testimonials-title">
+      <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-gold/15 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 left-1/4 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+      <Quote className="pointer-events-none absolute -bottom-12 -left-8 h-64 w-64 rotate-180 text-white/[0.025]" />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Header Block */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-          <div>
-            <span className="text-[10px] font-mono tracking-widest uppercase font-bold text-[#343EAF] flex items-center gap-1.5 mb-2">
-              <MessageSquareHeart className="h-4 w-4 text-brand-gold" />
-              Real Love from Real Patrons
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[#0B1354] font-display uppercase tracking-tight">
-              Loved By The Community
-            </h2>
-            <p className="text-sm text-gray-500 mt-1 max-w-lg leading-relaxed">
-              We are honored to have been serving sweet joy and crisp Ceylon baked treats for generations. Here is what our customers say.
-            </p>
-          </div>
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16 lg:px-8">
+        <div>
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-brand-gold backdrop-blur-sm">
+            <MessageSquareHeart className="h-4 w-4" /> Customer stories
+          </span>
+          <h2 id="testimonials-title" className="max-w-lg text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+            Baked with love. <span className="text-brand-gold">Remembered</span> for generations.
+          </h2>
+          <p className="mt-5 max-w-lg text-sm leading-7 text-blue-100/70 sm:text-base">
+            From everyday tea-time favourites to milestone celebrations, our customers have made us part of their sweetest memories.
+          </p>
 
-          {/* Slider controls */}
-          <div className="flex items-center gap-2.5 self-start md:self-end">
-            <button
-              onClick={() => handleScroll('left')}
-              disabled={!canScrollLeft}
-              className={`p-2.5 rounded-full border-2 transition-all ${
-                canScrollLeft
-                  ? 'border-[#0B1354] text-[#0B1354] hover:bg-[#0B1354] hover:text-white cursor-pointer active:scale-95'
-                  : 'border-gray-200 text-gray-300 cursor-not-allowed'
-              }`}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => handleScroll('right')}
-              disabled={!canScrollRight}
-              className={`p-2.5 rounded-full border-2 transition-all ${
-                canScrollRight
-                  ? 'border-[#0B1354] text-[#0B1354] hover:bg-[#0B1354] hover:text-white cursor-pointer active:scale-95'
-                  : 'border-gray-200 text-gray-300 cursor-not-allowed'
-              }`}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+          <div className="mt-8 grid max-w-md grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-1 text-brand-gold">
+                {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-3.5 w-3.5 fill-current" />)}
+              </div>
+              <p className="mt-2 text-2xl font-black">4.9/5</p>
+              <p className="text-[10px] uppercase tracking-wider text-blue-100/50">Average rating</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+              <ShieldCheck className="h-5 w-5 text-emerald-400" />
+              <p className="mt-2 text-2xl font-black">12,500+</p>
+              <p className="text-[10px] uppercase tracking-wider text-blue-100/50">Happy families</p>
+            </div>
           </div>
         </div>
 
-        {/* Carousel View Container */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-6 -mx-4 px-4 sm:mx-0 sm:px-0"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {REVIEWS.map((review) => (
-            <div
-              key={review.id}
-              className="w-[300px] sm:w-[350px] md:w-[380px] flex-shrink-0 snap-start"
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            <motion.article
+              key={activeReview.id}
+              initial={{ opacity: 0, x: 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -28 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="relative min-h-[390px] overflow-hidden rounded-[2rem] bg-white p-7 text-stone-900 shadow-[0_30px_90px_rgba(0,0,0,0.25)] sm:min-h-[420px] sm:p-10"
             >
-              <div className="bg-white rounded-2xl border border-gray-150/80 p-6 md:p-8 h-full flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow duration-300 relative group">
-                
-                {/* Floating quote indicator */}
-                <div className="absolute top-6 right-6 text-[#0B1354]/5 group-hover:text-[#0B1354]/10 transition-colors pointer-events-none">
-                  <Quote className="h-12 w-12 transform rotate-180" />
-                </div>
+              <div className="absolute right-7 top-6 text-brand-blue/[0.06] sm:right-10 sm:top-8">
+                <Quote className="h-20 w-20 rotate-180 sm:h-24 sm:w-24" />
+              </div>
 
-                {/* Stars and date */}
+              <div className="relative flex h-full min-h-[334px] flex-col justify-between sm:min-h-[340px]">
                 <div>
-                  <div className="flex items-center gap-1 mb-4">
-                    {Array.from({ length: 5 }).map((_, idx) => (
-                      <Star
-                        key={idx}
-                        className={`h-4 w-4 ${
-                          idx < review.rating
-                            ? 'text-brand-gold fill-brand-gold'
-                            : 'text-gray-200'
-                        }`}
-                      />
+                  <div className="flex items-center gap-1 text-brand-gold">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star key={index} className={`h-4 w-4 ${index < activeReview.rating ? 'fill-current' : 'text-stone-200'}`} />
                     ))}
-                    <span className="text-[10px] text-gray-400 font-mono ml-2">
-                      {review.date}
-                    </span>
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-stone-400">Verified customer</span>
                   </div>
-
-                  {/* Comment */}
-                  <p className="text-gray-600 text-sm leading-relaxed italic line-clamp-4">
-                    "{review.comment}"
-                  </p>
+                  <blockquote className="mt-8 max-w-2xl text-xl font-semibold leading-relaxed text-brand-blue sm:text-2xl sm:leading-relaxed">
+                    “{activeReview.comment}”
+                  </blockquote>
                 </div>
 
-                {/* Customer bio & product tag */}
-                <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between gap-3">
+                <footer className="mt-8 flex flex-col gap-5 border-t border-stone-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
-                    {/* Initials Avatar */}
-                    <div className={`h-10 w-10 rounded-full font-black text-sm flex items-center justify-center ${review.avatarBg}`}>
-                      {review.name.split(' ').map(n => n[0]).join('')}
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-black ${activeReview.avatarBg}`}>
+                      {activeReview.name.split(' ').map(name => name[0]).join('')}
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-[#0B1354] text-xs uppercase tracking-tight">
-                        {review.name}
-                      </h4>
-                      <span className="text-[10px] text-gray-400 block font-medium">
-                        {review.location}
-                      </span>
+                      <h3 className="text-sm font-extrabold text-brand-blue">{activeReview.name}</h3>
+                      <p className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-400">
+                        <MapPin className="h-3 w-3" /> {activeReview.location} · {activeReview.date}
+                      </p>
                     </div>
                   </div>
-
-                  {/* High fidelity dynamic product tag tagger */}
-                  <span className="bg-[#343EAF]/5 text-[#343EAF] text-[9px] font-bold font-mono tracking-wider uppercase px-2.5 py-1 rounded-sm">
-                    {review.productTag}
+                  <span className="w-fit rounded-full bg-brand-gold/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.15em] text-brand-gold-dark">
+                    {activeReview.productTag}
                   </span>
-                </div>
-
+                </footer>
               </div>
+            </motion.article>
+          </AnimatePresence>
+
+          <div className="mt-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2" aria-label={`Testimonial ${activeIndex + 1} of ${REVIEWS.length}`}>
+              {REVIEWS.map((review, index) => (
+                <button
+                  key={review.id}
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  className={`h-2 rounded-full transition-all ${activeIndex === index ? 'w-8 bg-brand-gold' : 'w-2 bg-white/25 hover:bg-white/50'}`}
+                  aria-label={`Show testimonial ${index + 1}`}
+                />
+              ))}
             </div>
-          ))}
-        </div>
-
-        {/* Mini Trust Signal Footer */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 border-t border-gray-100 pt-6">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider font-mono">
-            <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full" />
-            4.9/5 Average Rating
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider font-mono">
-            <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full" />
-            12,500+ Happy Jaffna & Colombo Families
+            <div className="flex gap-2">
+              <button type="button" onClick={showPrevious} className="rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:border-brand-gold hover:bg-brand-gold hover:text-brand-blue" aria-label="Previous testimonial">
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button type="button" onClick={showNext} className="rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:border-brand-gold hover:bg-brand-gold hover:text-brand-blue" aria-label="Next testimonial">
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
-
       </div>
     </section>
   );

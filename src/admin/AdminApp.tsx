@@ -4,11 +4,14 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from './AdminDashboard';
+import { hideBootLoader } from '../bootLoader';
 
 export default function AdminApp() {
   const [session, setSession] = useState<Session | null | undefined>(undefined); // undefined = still loading
   const [profile, setProfile] = useState<{ id: string; name: string; email: string; role: string } | null>(null);
   const [profileError, setProfileError] = useState('');
+
+  useEffect(() => hideBootLoader(), []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));

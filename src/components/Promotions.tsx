@@ -1,258 +1,208 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Sparkles, Tag, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, BadgePercent, Clock3, Gift, Sparkles } from 'lucide-react';
 import { Product } from '../types';
 import { PRODUCTS } from '../data';
 
 interface PromotionsProps {
   onProductClick: (product: Product) => void;
   eggPuffProduct: Product | undefined;
+  showCoupons?: boolean;
 }
 
-export default function Promotions({ onProductClick, eggPuffProduct }: PromotionsProps) {
-  const customCakeProduct = PRODUCTS.find((p) => p.id === 'romance-pink-heart');
-  
-  // List of extra promotional campaigns for the dedicated Promotions page
-  const extraPromotions = [
-    {
-      id: 'promo-1',
-      tag: 'Weekend Special',
-      title: 'Family Feast Pack',
-      desc: 'Buy any 1.5kg Customizable Cake and get 4 Cinnamon Rolls & 4 Ceylon Spicy Egg Puffs absolutely FREE!',
-      code: 'FAMFEAST82',
-      expiry: 'Valid every Friday - Sunday',
-      color: 'bg-emerald-50 border-emerald-100 text-emerald-800'
-    },
-    {
-      id: 'promo-2',
-      tag: 'Tea Time Bundle',
-      title: 'Savouries Combo',
-      desc: 'Get 2 Ceylon Spicy Egg Puffs, 2 Fish Patties, and 2 Chicken Samosas + 2 Tea/Coffee for just $4.99.',
-      code: 'TEATIME99',
-      expiry: 'Daily from 3:00 PM to 6:00 PM',
-      color: 'bg-amber-50 border-amber-100 text-amber-800'
-    },
-    {
-      id: 'promo-3',
-      tag: 'Birthday Special',
-      title: '10% Off Birthday Cakes',
-      desc: 'Pre-order any Birthday or Wedding cake at least 5 days in advance and enjoy a 10% discount on the final price.',
-      code: 'CELEBRATE10',
-      expiry: 'Ongoing Promotion',
-      color: 'bg-indigo-50 border-indigo-100 text-indigo-800'
-    }
-  ];
+const extraPromotions = [
+  {
+    id: 'promo-1',
+    tag: 'Weekend Special',
+    title: 'Family Feast Pack',
+    desc: 'Buy any 1.5kg customizable cake and receive cinnamon rolls and spicy egg puffs free.',
+    code: 'FAMFEAST82',
+    expiry: 'Friday to Sunday',
+  },
+  {
+    id: 'promo-2',
+    tag: 'Tea Time Bundle',
+    title: 'Savouries Combo',
+    desc: 'A delicious mix of egg puffs, fish patties, chicken samosas and two hot drinks.',
+    code: 'TEATIME99',
+    expiry: 'Daily, 3:00 PM–6:00 PM',
+  },
+  {
+    id: 'promo-3',
+    tag: 'Birthday Special',
+    title: '10% Off Celebration Cakes',
+    desc: 'Pre-order a birthday or wedding cake five days ahead and save on the final price.',
+    code: 'CELEBRATE10',
+    expiry: 'Ongoing promotion',
+  },
+];
+
+function CouponCards() {
+  return (
+    <div className="rounded-[2rem] border border-stone-200 bg-stone-50 p-5 sm:p-8">
+      <div className="mb-6 flex items-center gap-3">
+        <span className="rounded-xl bg-brand-blue p-2.5 text-brand-gold"><Gift className="h-5 w-5" /></span>
+        <div>
+          <h3 className="text-xl font-extrabold text-brand-blue">Exclusive coupon codes</h3>
+          <p className="text-xs text-stone-500">Use a code at checkout to claim your offer.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {extraPromotions.map((promo, index) => (
+          <motion.article
+            key={promo.id}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.4, delay: index * 0.06 }}
+            className="flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-5 transition-all hover:-translate-y-1 hover:border-brand-gold/50 hover:shadow-lg"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-brand-gold-dark">{promo.tag}</span>
+              <BadgePercent className="h-5 w-5 text-brand-gold" />
+            </div>
+            <h4 className="mt-3 text-lg font-extrabold text-brand-blue">{promo.title}</h4>
+            <p className="mt-2 flex-1 text-xs leading-5 text-stone-500">{promo.desc}</p>
+            <div className="mt-5 border-t border-dashed border-stone-200 pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Use code</span>
+                <code className="rounded-lg border border-brand-blue/10 bg-brand-blue/5 px-3 py-1.5 text-xs font-extrabold tracking-wider text-brand-blue selection:bg-brand-gold">
+                  {promo.code}
+                </code>
+              </div>
+              <p className="mt-3 flex items-center gap-1.5 text-[10px] font-medium text-stone-400">
+                <Clock3 className="h-3.5 w-3.5 text-emerald-500" /> {promo.expiry}
+              </p>
+            </div>
+          </motion.article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function CouponOffers() {
+  return (
+    <section className="bg-white pb-14 sm:pb-20" aria-label="Exclusive coupon offers">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <CouponCards />
+      </div>
+    </section>
+  );
+}
+
+export default function Promotions({ onProductClick, eggPuffProduct, showCoupons = true }: PromotionsProps) {
+  const customCakeProduct = PRODUCTS.find(product => product.id === 'romance-pink-heart');
 
   return (
-    <div className="py-16 bg-gray-50/50">
+    <section className="overflow-hidden bg-white py-14 sm:py-20" aria-labelledby="promotions-title">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
-        {/* Main Section Header */}
-        <div className="text-center mb-12">
-          <span className="text-xs font-bold text-brand-gold uppercase tracking-widest bg-brand-gold/10 px-3 py-1.5 rounded-full inline-block mb-3">
-            Special Deals
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-brand-blue tracking-tight">
-            PROMOTIONS & COMBOS
-          </h2>
-          <p className="mt-2 text-sm text-gray-500 max-w-lg mx-auto">
-            Freshly prepared treats with incredible value. Tap on an offer to explore more details or place an order.
+        <div className="mb-9 flex flex-col gap-5 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-gold/10 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-gold-dark">
+              <Sparkles className="h-3.5 w-3.5" /> Fresh offers
+            </div>
+            <h2 id="promotions-title" className="text-3xl font-extrabold tracking-tight text-brand-blue sm:text-4xl lg:text-5xl">
+              Promotions <span className="text-brand-gold">& Combos</span>
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-stone-500 sm:text-base">
+              More reasons to share something delicious—limited-time favourites and bundles made for every occasion.
+            </p>
+          </div>
+          <p className="hidden items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-stone-400 sm:flex">
+            <Clock3 className="h-4 w-4 text-brand-gold" /> Available for a limited time
           </p>
         </div>
 
-        {/* The Three Main Image Banners */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16">
-          
-          {/* Promotion Card 1: Egg Puff */}
-          <motion.div
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-            className="relative rounded-2xl overflow-hidden bg-[#FAF6F0] border border-stone-200/50 shadow-md flex flex-col justify-between h-[420px] p-8 group cursor-pointer"
-            onClick={() => {
-              if (eggPuffProduct) {
-                onProductClick(eggPuffProduct);
-              }
-            }}
+        <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
+          <motion.button
+            type="button"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => eggPuffProduct && onProductClick(eggPuffProduct)}
+            className="group relative min-h-[440px] overflow-hidden rounded-[2rem] bg-stone-950 text-left shadow-[0_24px_70px_rgba(11,19,84,0.2)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-gold/50 sm:min-h-[510px]"
+            aria-label="View the egg puff promotion"
           >
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-stone-100/50 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-4 left-4 text-[13px] font-semibold text-stone-400 font-serif">
-              Thinesh Bake House Since 1982
-            </div>
+            <img
+              src={eggPuffProduct?.image || 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=85&w=1200'}
+              alt="Golden egg puff promotion"
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/75 to-stone-950/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent" />
 
-            {/* Typography Content */}
-            <div className="z-10">
-              <span className="text-stone-500 text-xs font-bold tracking-wider font-mono uppercase block mb-1">
-                Local Favourite
-              </span>
-              <h3 className="text-4xl font-extrabold text-[#5C4033] font-display tracking-tight leading-none mb-1">
-                Egg Puff
-              </h3>
-              <p className="text-stone-600 text-sm font-medium tracking-wide italic">
-                Flaky. Golden. Irresistible.
-              </p>
-
-              {/* Price Tag Badge exactly like screenshot: "130/=" */}
-              <div className="mt-4 inline-flex items-center justify-center bg-[#8B5A2B] text-white font-extrabold text-lg px-4 py-2 rounded-lg shadow-md border border-amber-950/20">
-                130/=
+            <div className="relative flex h-full min-h-[440px] max-w-md flex-col justify-between p-7 sm:min-h-[510px] sm:p-10">
+              <div className="flex items-center justify-between">
+                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+                  Local favourite
+                </span>
+                <span className="rounded-full bg-white p-2.5 text-brand-blue shadow-xl transition-transform group-hover:rotate-6 group-hover:scale-110">
+                  <ArrowUpRight className="h-5 w-5" />
+                </span>
               </div>
-            </div>
 
-            {/* Delicious image of puff pastry on slate at bottom/right */}
-            <div className="absolute bottom-0 right-0 w-3/4 h-1/2 overflow-hidden rounded-tl-3xl shadow-2xl border-t border-l border-white/20">
-              <img
-                src="https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=600"
-                alt="Golden Egg Puff"
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                referrerPolicy="no-referrer"
-              />
-              {/* Overlay shadow */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-            </div>
-
-            {/* Hover arrow indicator */}
-            <div className="absolute top-8 right-8 bg-white/80 hover:bg-white text-[#5C4033] p-2 rounded-full shadow-sm hover:scale-110 transition-transform">
-              <ArrowRight className="h-5 w-5" />
-            </div>
-          </motion.div>
-
-          {/* Promotion Card 2: Muffins - Fluffy. Fresh. Fantastic */}
-          <motion.div
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-            className="relative rounded-2xl overflow-hidden bg-[#0A195C] text-white shadow-md flex flex-col justify-between h-[420px] p-8 group"
-          >
-            {/* Background elements */}
-            <div className="absolute inset-0 bg-radial from-[#1A31A0] via-transparent to-transparent opacity-70 pointer-events-none" />
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/10 rounded-full blur-xl pointer-events-none" />
-
-            {/* Typography Content */}
-            <div className="z-10">
-              <span className="text-blue-300 text-xs font-bold tracking-widest font-mono uppercase block mb-1">
-                Daily Treats
-              </span>
-              <h3 className="text-3xl font-extrabold text-white font-display tracking-tight leading-tight">
-                Fluffy. Fresh.<br />Fantastic.
-              </h3>
-              <p className="text-blue-200 text-sm font-light mt-1">
-                Perfect with your morning coffee.
-              </p>
-            </div>
-
-            {/* Muffins in wood tray image at bottom/right */}
-            <div className="absolute bottom-16 right-0 w-3/4 h-1/2 overflow-hidden rounded-tl-3xl shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=80&w=600"
-                alt="Fluffy Muffins"
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-            </div>
-
-            {/* Bottom contact ribbon from screenshot: "Ready for a bite? Visit our site to order now! www.tbh.lk" */}
-            <div className="absolute bottom-0 inset-x-0 bg-blue-700/80 backdrop-blur-xs px-6 py-3 text-[11px] sm:text-xs text-center border-t border-blue-500/30 flex items-center justify-between gap-2">
-              <span className="font-medium text-blue-100">Ready for a bite? Visit our site to order now!</span>
-              <a href="https://tbh.lk" target="_blank" rel="noreferrer" className="font-bold text-white hover:text-brand-gold underline tracking-wide">
-                www.tbh.lk
-              </a>
-            </div>
-          </motion.div>
-
-          {/* Promotion Card 3: Celebration Cakes - Elegant. Exquisite. Enchanting. */}
-          <motion.div
-            whileHover={{ y: -6, transition: { duration: 0.2 } }}
-            className="relative rounded-2xl overflow-hidden bg-[#4E1119] text-white shadow-md flex flex-col justify-between h-[420px] p-8 group cursor-pointer"
-            onClick={() => {
-              if (customCakeProduct) {
-                onProductClick(customCakeProduct);
-              }
-            }}
-          >
-            {/* Background elements */}
-            <div className="absolute inset-0 bg-radial from-[#7C1E2B] via-transparent to-transparent opacity-70 pointer-events-none" />
-            <div className="absolute top-0 right-0 w-24 h-24 bg-red-400/10 rounded-full blur-xl pointer-events-none" />
-
-            {/* Typography Content */}
-            <div className="z-10">
-              <span className="text-red-300 text-xs font-bold tracking-widest font-mono uppercase block mb-1">
-                Signature Cakes
-              </span>
-              <h3 className="text-3xl font-extrabold text-white font-display tracking-tight leading-tight">
-                Elegant. Exquisite.<br />Enchanting.
-              </h3>
-              <p className="text-red-200 text-sm font-light mt-1">
-                Custom masterpieces for your special events.
-              </p>
-            </div>
-
-            {/* Cake image at bottom/right */}
-            <div className="absolute bottom-16 right-0 w-3/4 h-1/2 overflow-hidden rounded-tl-3xl shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600"
-                alt="Celebration Cakes"
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-            </div>
-
-            {/* Bottom contact ribbon */}
-            <div className="absolute bottom-0 inset-x-0 bg-[#7B1E29] backdrop-blur-xs px-6 py-3 text-[11px] sm:text-xs text-center border-t border-red-500/20 flex items-center justify-between gap-2">
-              <span className="font-medium text-red-100">Planning an event? Custom order now!</span>
-              <span className="font-bold text-brand-gold tracking-wide">
-                021 221 2525
-              </span>
-            </div>
-            
-            {/* Hover arrow indicator */}
-            <div className="absolute top-8 right-8 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full shadow-sm hover:scale-110 transition-transform">
-              <ArrowRight className="h-5 w-5" />
-            </div>
-          </motion.div>
-
-        </div>
-
-        {/* Extra Campaign Grid for the Promotion Page */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-xs">
-          <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
-            <Tag className="h-5 w-5 text-brand-gold" />
-            <h3 className="text-xl font-bold text-brand-blue font-display">
-              Exclusive Coupon Codes
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {extraPromotions.map((promo) => (
-              <div key={promo.id} className="border border-gray-150 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 hover:shadow-xs transition-all bg-gray-50/30">
-                <div>
-                  <span className="text-[10px] font-bold tracking-wider font-mono uppercase bg-gray-200/60 text-gray-700 px-2 py-1 rounded-sm">
-                    {promo.tag}
-                  </span>
-                  <h4 className="font-bold text-base text-brand-blue font-display mt-2.5 mb-1.5">
-                    {promo.title}
-                  </h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    {promo.desc}
-                  </p>
-                </div>
-                
-                <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-400">Coupon Code:</span>
-                    <span className="font-mono font-bold bg-brand-blue/5 text-brand-blue border border-brand-blue/10 px-2.5 py-1 rounded-md text-[11px] tracking-wide select-all">
-                      {promo.code}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>{promo.expiry}</span>
-                  </div>
+              <div>
+                <p className="mb-2 text-sm font-bold uppercase tracking-[0.22em] text-brand-gold">Flaky · Golden · Irresistible</p>
+                <h3 className="text-5xl font-black leading-none tracking-tight text-white sm:text-7xl">Egg Puff</h3>
+                <div className="mt-6 flex items-center gap-4">
+                  <span className="rounded-xl bg-brand-gold px-5 py-3 text-2xl font-black text-brand-blue shadow-lg">130/=</span>
+                  <span className="max-w-[150px] text-xs font-medium leading-5 text-white/70">Baked fresh throughout the day.</span>
                 </div>
               </div>
-            ))}
+            </div>
+          </motion.button>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+            <motion.article
+              whileHover={{ y: -4 }}
+              className="group relative min-h-[242px] overflow-hidden rounded-[2rem] bg-brand-blue shadow-[0_18px_50px_rgba(11,19,84,0.14)]"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=85&w=900"
+                alt="Freshly baked muffins"
+                referrerPolicy="no-referrer"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-blue via-brand-blue/85 to-brand-blue/10" />
+              <div className="relative flex min-h-[242px] max-w-xs flex-col justify-end p-7">
+                <span className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-brand-gold">Daily treats</span>
+                <h3 className="text-3xl font-extrabold leading-none text-white">Fresh Muffins</h3>
+                <p className="mt-2 text-sm text-blue-100/80">Soft, fluffy and perfect with your morning coffee.</p>
+              </div>
+            </motion.article>
+
+            <motion.button
+              type="button"
+              whileHover={{ y: -4 }}
+              onClick={() => customCakeProduct && onProductClick(customCakeProduct)}
+              className="group relative min-h-[242px] overflow-hidden rounded-[2rem] bg-[#50141d] text-left shadow-[0_18px_50px_rgba(80,20,29,0.16)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-gold/50"
+              aria-label="View custom celebration cakes"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=85&w=900"
+                alt="Custom celebration cake"
+                referrerPolicy="no-referrer"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#50141d] via-[#50141d]/85 to-transparent" />
+              <div className="relative flex min-h-[242px] max-w-xs flex-col justify-end p-7">
+                <span className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-brand-gold">Made for your moment</span>
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <h3 className="text-3xl font-extrabold leading-none text-white">Custom Cakes</h3>
+                    <p className="mt-2 text-sm text-red-100/80">Designed beautifully for every celebration.</p>
+                  </div>
+                  <ArrowUpRight className="mb-1 h-5 w-5 shrink-0 text-white" />
+                </div>
+              </div>
+            </motion.button>
           </div>
         </div>
 
+        {showCoupons && <div className="mt-8 sm:mt-10"><CouponCards /></div>}
       </div>
-    </div>
+    </section>
   );
 }

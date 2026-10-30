@@ -27,6 +27,30 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
 }
 
+@keyframes tbh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Thin bar across the top of the screen when moving between storefront pages */
+.tbh-page-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  height: 3px;
+  background: var(--color-brand-gold);
+  box-shadow: 0 0 8px var(--color-brand-gold);
+  pointer-events: none;
+  animation: tbh-page-progress 0.7s ease-out forwards;
+}
+
+@keyframes tbh-page-progress {
+  0% { width: 0; opacity: 1; }
+  70% { width: 85%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

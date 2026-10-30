@@ -42,7 +42,7 @@ export async function uploadDataUrlImage(image: string, fileNameHint: string): P
 export async function downloadAndUploadImage(sourceUrl: string, fileNameHint: string): Promise<string> {
   if (!sourceUrl) return sourceUrl;
   try {
-    const res = await fetch(sourceUrl);
+    const res = await fetch(sourceUrl, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) {
       console.warn(`Image download failed (${res.status}) for ${sourceUrl}, keeping original URL.`);
       return sourceUrl;

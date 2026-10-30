@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+.vercel
+.env*
+
+# Dialog Genie WordPress plugin (reference only)
+genie-business-payment-gateway/
+genie-business-payment-gateway.zip

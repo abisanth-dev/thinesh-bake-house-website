@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User as UserIcon, MapPin, Heart, ShoppingBag, LogOut, Check, ExternalLink } from 'lucide-react';
 import { User, Order, Product } from '../types';
+import { useSiteSettings } from './SiteSettingsContext';
+import { formatMoney } from '../siteSettings';
 
 interface CustomerAccountModalProps {
   isOpen: boolean;
@@ -26,6 +28,8 @@ export default function CustomerAccountModal({
   onAddToCartDirectly,
   onTrackOrderClick
 }: CustomerAccountModalProps) {
+  const settings = useSiteSettings();
+  const money = (value: number) => formatMoney(value, settings);
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist'>('orders');
 
   if (!isOpen || !user) return null;
@@ -141,16 +145,16 @@ export default function CustomerAccountModal({
                             <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
                             <div className="flex-1 text-xs">
                               <span className="font-semibold text-gray-800">{item.name}</span>
-                              <span className="text-gray-400 block">Qty: {item.quantity} × Rs. {item.price}</span>
+                              <span className="text-gray-400 block">Qty: {item.quantity} × {money(item.price)}</span>
                             </div>
-                            <span className="font-bold text-xs font-mono">Rs. {item.quantity * item.price}</span>
+                            <span className="font-bold text-xs font-mono">{money(item.quantity * item.price)}</span>
                           </div>
                         ))}
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-gray-700">
                         <span>Pickup: {ord.pickupBranch}</span>
-                        <span className="text-sm font-bold font-mono text-brand-blue">Total: Rs. {ord.total}</span>
+                        <span className="text-sm font-bold font-mono text-brand-blue">Total: {money(ord.total)}</span>
                       </div>
                     </div>
                   ))
@@ -172,7 +176,9 @@ export default function CustomerAccountModal({
                       <img src={p.image} alt={p.name} className="w-16 h-16 rounded-lg object-cover" />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-sm text-gray-900 truncate">{p.name}</h4>
-                        <span className="font-bold font-mono text-brand-blue text-xs block">Rs. {p.priceMin}</span>
+                        {p.checkoutDisabled
+                          ? <span className="text-xs font-semibold italic text-amber-700 block">Price updating soon</span>
+                          : <span className="font-bold font-mono text-brand-blue text-xs block">{money(p.priceMin)}</span>}
                         <button
                           onClick={() => onAddToCartDirectly(p)}
                           className="mt-1.5 text-xs bg-brand-gold text-white px-2.5 py-1 rounded-md font-semibold hover:bg-brand-gold-dark transition-all"

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, Star, Calendar, MessageSquare, ShieldAlert, BadgeCheck, CircleHelp } from 'lucide-react';
+import { X, Calendar, MessageSquare, BadgeCheck, CircleHelp } from 'lucide-react';
 import { Product, CartItem } from '../types';
-import { MOCK_REVIEWS } from '../data';
+import { useSiteSettings } from './SiteSettingsContext';
+import { formatMoney } from '../siteSettings';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -10,17 +11,21 @@ interface ProductDetailModalProps {
   onAddToCart: (item: Omit<CartItem, 'id'>) => void;
 }
 
-type TabType = 'details' | 'reviews' | 'additional';
-
 export default function ProductDetailModal({ product, onClose, onAddToCart }: ProductDetailModalProps) {
   if (!product) return null;
 
-  const [activeTab, setActiveTab] = useState<TabType>('details');
+  return <ProductDetailContent product={product} onClose={onClose} onAddToCart={onAddToCart} />;
+}
+
+function ProductDetailContent({ product, onClose, onAddToCart }: Omit<ProductDetailModalProps, 'product'> & { product: Product }) {
+  const settings = useSiteSettings();
+
   const [selectedType, setSelectedType] = useState('');
   const [selectedWeight, setSelectedWeight] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [customMessage, setCustomMessage] = useState('');
   const [formError, setFormError] = useState('');
+  const [selectedVariantId, setSelectedVariantId] = useState('');
 
   // Auto-select first options if available
   useEffect(() => {
@@ -33,12 +38,25 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }: Pr
     setDeliveryDate('');
     setCustomMessage('');
     setFormError('');
-    setActiveTab('details');
+    const firstPackage = product.productType === 'food'
+      ? product.variants?.find(variant => Number(variant.servesPersons) > 0 && Number(variant.price) > 0 && variant.stockStatus !== 'out_of_stock')
+      : product.variants?.[0];
+    setSelectedVariantId(firstPackage?.id || '');
   }, [product]);
 
-  // Compute final price based on selected weight
+  const selectedVariant = product.variants?.find(variant => variant.id === selectedVariantId);
+  const isCombo = product.productType === 'combo';
+  const comboItems = isCombo ? (product.comboItems || []) : [];
+  const comboRegularPrice = Number(product.regularPrice ?? product.priceMin ?? 0);
+  const comboSavings = isCombo ? Math.max(0, comboRegularPrice - Number(product.priceMin ?? 0)) : 0;
+  const foodPackages = React.useMemo(() => product.productType === 'food'
+    ? (product.variants || []).filter(variant => Number(variant.servesPersons) > 0 && Number(variant.price) > 0)
+    : [], [product]);
+
+  // Compute final price from a Woo/manual variant, or from legacy cake weight options.
   const currentPrice = React.useMemo(() => {
-    let price = product.priceMin;
+    let price = selectedVariant ? Number(selectedVariant.salePrice ?? selectedVariant.price) : product.priceMin;
+    if (product.productType === 'food') return price;
     if (product.isCustomizable && product.weights && selectedWeight) {
       const idx = product.weights.indexOf(selectedWeight);
       if (idx > 0) {
@@ -47,9 +65,17 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }: Pr
       }
     }
     return price;
-  }, [product, selectedWeight]);
+  }, [product, selectedWeight, selectedVariant]);
 
   const handleAddToCart = () => {
+    if (product.productType === 'food' && (!selectedVariant || Number(selectedVariant.servesPersons) < 1 || selectedVariant.stockStatus === 'out_of_stock')) {
+      setFormError(foodPackages.length ? 'Please choose a bulk order package.' : 'This food item does not have an available bulk order package yet.');
+      return;
+    }
+    if (product.productType !== 'food' && product.variants?.length && !selectedVariant) {
+      setFormError('Please choose a product option.');
+      return;
+    }
     if (product.isCustomizable) {
       if (!selectedType) {
         setFormError('Please choose a Cake Type.');
@@ -69,11 +95,14 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }: Pr
       product,
       quantity: 1,
       selectedPrice: currentPrice,
-      customizations: product.isCustomizable ? {
+      customizations: product.isCustomizable || selectedVariant || product.productType === 'food' ? {
         cakeType: selectedType,
         weight: selectedWeight,
         deliveryDate,
-        message: customMessage
+        message: customMessage,
+        variantId: selectedVariant?.id,
+        variantLabel: product.productType === 'food' && selectedVariant ? `Serves ${selectedVariant.servesPersons} people` : selectedVariant?.attributes.map(attribute => `${attribute.name}: ${attribute.option}`).join(' · '),
+        servesPersons: product.productType === 'food' ? selectedVariant?.servesPersons : undefined,
       } : undefined
     });
     
@@ -128,44 +157,55 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }: Pr
             </h2>
             
             {/* Price section */}
-            <div className="flex items-baseline gap-2 mb-6">
+            <div className="flex flex-wrap items-baseline gap-2 mb-6">
               <span className="text-[#343EAF] font-bold font-mono text-xl md:text-2xl">
-                {product.isCustomizable 
-                  ? `$${currentPrice.toFixed(2)}` 
-                  : `$${product.priceMin.toFixed(2)}`
-                }
+                {formatMoney(currentPrice, settings)}
               </span>
+              {comboSavings > 0 && (
+                <>
+                  <span className="font-mono text-sm text-gray-400 line-through">{formatMoney(comboRegularPrice, settings)}</span>
+                  <span className="rounded-full bg-emerald-600 px-2.5 py-1 font-mono text-[11px] font-black text-white">
+                    Save {formatMoney(comboSavings, settings)}
+                  </span>
+                </>
+              )}
               {product.isCustomizable && product.priceMax && (
                 <span className="text-xs text-gray-400 font-medium">
-                  (Custom options range: ${product.priceMin.toFixed(2)} - ${product.priceMax.toFixed(2)})
+                  (Custom options range: {formatMoney(product.priceMin, settings)} - {formatMoney(product.priceMax, settings)})
                 </span>
               )}
             </div>
 
-            {/* Custom Interactive Tabs selector */}
-            <div className="flex border-b border-gray-150 mb-6 bg-gray-50 p-1 rounded-lg">
-              {(['details', 'reviews', 'additional'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all cursor-pointer ${
-                    activeTab === tab
-                      ? 'bg-[#343EAF] text-white shadow-xs'
-                      : 'text-gray-500 hover:text-brand-blue hover:bg-gray-200/50'
-                  }`}
-                >
-                  {tab === 'additional' ? 'Info' : tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Contents */}
+            {/* Product details — the modal shows this alone now that Info and Reviews are gone */}
             <div className="min-h-[140px] mb-6">
-              {activeTab === 'details' && (
-                <div className="space-y-4">
+              <div className="space-y-4">
                   <p className="text-sm text-gray-600 leading-relaxed">
                     {product.description}
                   </p>
+                  {isCombo && comboItems.length > 0 && (
+                    <div className="rounded-2xl border border-brand-gold/35 bg-[#FFFCF5] p-4">
+                      <p className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Inside this combo</p>
+                      <ul className="space-y-2">
+                        {comboItems.map((item, itemIndex) => (
+                          <li key={`${item.productId}-${itemIndex}`} className="flex items-center justify-between gap-3 text-xs text-stone-700">
+                            <span className="flex min-w-0 items-center gap-2.5">
+                              <span className="min-w-[34px] shrink-0 rounded-md bg-brand-blue/10 px-1.5 py-0.5 text-center font-mono text-[11px] font-bold text-brand-blue">{item.quantity}×</span>
+                              <span className="truncate font-semibold">{item.name}</span>
+                            </span>
+                            <span className="shrink-0 font-mono text-[11px] text-stone-400">
+                              {formatMoney(Number(item.quantity) * Number(item.unitPrice), settings)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-3 flex items-center justify-between border-t border-dashed border-brand-gold/35 pt-3 text-xs">
+                        <span className="font-semibold text-stone-500">Combined item value</span>
+                        <span className="font-mono font-bold text-stone-500 line-through">{formatMoney(comboRegularPrice, settings)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {product.productType !== 'food' && product.variants && product.variants.length > 0 && <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4"><label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-brand-blue">Choose an option *</label><select value={selectedVariantId} onChange={event => setSelectedVariantId(event.target.value)} className="w-full rounded-lg border border-blue-100 bg-white px-3 py-2.5 text-sm font-semibold text-stone-700"><option value="">Choose an option</option>{product.variants.map(variant => <option key={variant.id} value={variant.id} disabled={variant.stockStatus === 'out_of_stock'}>{variant.attributes.map(attribute => `${attribute.name}: ${attribute.option}`).join(' · ') || variant.sku || 'Variant'} — {formatMoney(Number(variant.salePrice ?? variant.price), settings)}{variant.stockStatus === 'out_of_stock' ? ' (Out of stock)' : ''}</option>)}</select></div>}
+                  {product.productType === 'food' && <div className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-wider text-amber-900">Bulk food order</p><p className="mt-1 text-[10px] text-amber-800">Choose the package for your group. Preparation time is approximately {product.preparationMinutes || settings.foodOrdering.defaultPreparationMinutes} minutes.</p></div><span className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-amber-800">ASAP / Schedule</span></div>{foodPackages.length ? <fieldset><legend className="mb-2 text-xs font-bold text-stone-700">How many people? *</legend><div className="grid grid-cols-2 gap-2">{foodPackages.map(variant => { const checked = selectedVariantId === variant.id; return <label key={variant.id} className={`cursor-pointer rounded-xl border p-3 text-center ${checked ? 'border-brand-gold bg-white font-bold text-amber-900 shadow-sm' : 'border-amber-100 bg-white/70 text-stone-600'} ${variant.stockStatus === 'out_of_stock' ? 'cursor-not-allowed opacity-50' : ''}`}><input type="radio" name="bulk-package" value={variant.id} checked={checked} disabled={variant.stockStatus === 'out_of_stock'} onChange={() => setSelectedVariantId(variant.id)} className="sr-only" /><span className="block text-sm font-black">{variant.servesPersons} people</span><span className="mt-1 block text-xs text-brand-blue">{formatMoney(Number(variant.price), settings)}</span></label>; })}</div></fieldset> : <p className="rounded-xl border border-dashed border-amber-300 bg-white p-3 text-xs font-semibold text-amber-900">Bulk packages are not configured for this item yet.</p>}</div>}
                   
                   {/* Customization Fields Form (Show only if customizable cake) */}
                   {product.isCustomizable ? (
@@ -250,66 +290,15 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }: Pr
                     <div className="mt-8 p-4 rounded-xl bg-gray-50 border border-gray-150 flex items-center gap-3">
                       <BadgeCheck className="h-5 w-5 text-emerald-500 flex-shrink-0" />
                       <div className="text-xs text-gray-500 leading-snug">
-                        This item is freshly baked daily. No pre-ordering or customization required! It will be prepared and packed for immediate checkout.
+                        {product.productType === 'food'
+                          ? 'Bulk food orders are prepared for the selected number of people. Choose a package above, then select ASAP or a scheduled time during checkout.'
+                          : isCombo
+                          ? 'Every item listed above is included in this combo and packed together at the single combo price.'
+                          : 'This item is freshly baked daily. No pre-ordering or customization required! It will be prepared and packed for immediate checkout.'}
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {activeTab === 'reviews' && (
-                <div className="space-y-4 max-h-[220px] overflow-y-auto pr-2">
-                  <div className="flex items-center gap-2 mb-2 bg-brand-blue/5 p-3 rounded-lg border border-brand-blue/5">
-                    <span className="text-xl font-bold text-brand-blue">4.8</span>
-                    <div className="flex text-amber-400">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className="h-3.5 w-3.5 fill-current" />
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-400 font-medium ml-auto">Based on 12 reviews</span>
-                  </div>
-
-                  {MOCK_REVIEWS.map((review, idx) => (
-                    <div key={idx} className="border-b border-gray-100 pb-3 last:border-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-gray-800">{review.author}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">{review.date}</span>
-                      </div>
-                      <div className="flex text-amber-400 mb-1">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-current" />
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-500 italic leading-snug">
-                        "{review.comment}"
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'additional' && (
-                <div className="space-y-4 text-xs text-gray-500 leading-relaxed">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-150">
-                      <span className="block font-bold text-gray-700 uppercase tracking-wider mb-1">Allergens</span>
-                      Contains wheat gluten, dairy, butter, eggs. May contain traces of cashews and peanuts.
-                    </div>
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-150">
-                      <span className="block font-bold text-gray-700 uppercase tracking-wider mb-1">Storage</span>
-                      Keep refrigerated between 2°C and 4°C. Best consumed within 48 hours of purchase.
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-[#FCF8E3] rounded-lg border border-[#FBEED5] text-[#8A6D3B] flex items-start gap-2.5">
-                    <ShieldAlert className="h-4.5 w-4.5 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold block mb-0.5">Custom Cake Notice</span>
-                      Custom icing and details are handcrafted by our master bakers. Slight variations in color shade or decoration layout may occur as part of the authentic artisanal baking process.
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -324,11 +313,12 @@ export default function ProductDetailModal({ product, onClose, onAddToCart }: Pr
             
             <button
               onClick={handleAddToCart}
-              className="w-full py-3.5 bg-[#343EAF] hover:bg-[#252E90] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+              disabled={product.productType === 'food' && !foodPackages.some(variant => variant.stockStatus !== 'out_of_stock')}
+              className="w-full py-3.5 bg-[#343EAF] hover:bg-[#252E90] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span>Add to Cart</span>
               <span className="w-1.5 h-1.5 rounded-full bg-white opacity-40" />
-              <span>${product.isCustomizable ? currentPrice.toFixed(2) : product.priceMin.toFixed(2)}</span>
+              <span>{formatMoney(currentPrice, settings)}</span>
             </button>
           </div>
         </div>

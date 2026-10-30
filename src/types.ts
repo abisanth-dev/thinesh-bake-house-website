@@ -21,10 +21,58 @@ export interface Address {
   country: string;
 }
 
+export interface PickupPerson {
+  fullName: string;
+  phone: string;
+}
+
+/** The three top-level storefront menu groups. Products and categories both belong to one. */
+export type MenuGroup = 'bakery' | 'food' | 'combo';
+
+/** One catalogue product included inside a combo, e.g. 15 × Fish Roll. */
+export interface ComboItem {
+  productId: string;
+  name: string;
+  image?: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface ProductSEO {
   metaTitle?: string;
   metaDescription?: string;
   ogImage?: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  wcId?: number;
+  servesPersons?: number;
+  sku?: string;
+  price: number;
+  regularPrice?: number;
+  salePrice?: number;
+  image?: string;
+  stockQuantity?: number;
+  stockStatus?: 'in_stock' | 'out_of_stock' | 'low_stock';
+  attributes: Array<{ name: string; option: string }>;
+}
+
+export interface ProductModifierOption {
+  id: string;
+  name: string;
+  priceAdjustment: number;
+  enabled: boolean;
+}
+
+export interface ProductModifierGroup {
+  id: string;
+  name: string;
+  required: boolean;
+  selectionType: 'single' | 'multiple';
+  minimumSelections: number;
+  maximumSelections?: number;
+  options: ProductModifierOption[];
 }
 
 export interface Product {
@@ -51,10 +99,40 @@ export interface Product {
   isFastMoving?: boolean;
   stockQuantity?: number;
   stockStatus?: 'in_stock' | 'out_of_stock' | 'low_stock';
+  /** Set by the storefront when the product's category has checkout switched off in admin. */
+  checkoutDisabled?: boolean;
   seo?: ProductSEO;
   wcId?: number;
   wcPermalink?: string;
   rawWcCategories?: string[];
+  variants?: ProductVariant[];
+  productType?: MenuGroup;
+  preparationMinutes?: number;
+  allowAsap?: boolean;
+  allowScheduled?: boolean;
+  modifierGroups?: ProductModifierGroup[];
+  /** Combo products only: the catalogue items bundled into this combo. */
+  comboItems?: ComboItem[];
+}
+
+export interface SelectedFoodModifier {
+  groupId: string;
+  groupName: string;
+  optionId: string;
+  optionName: string;
+  priceAdjustment: number;
+}
+
+export interface CartItemCustomizations {
+  cakeType?: string;
+  weight?: string;
+  deliveryDate?: string;
+  message?: string;
+  variantId?: string;
+  variantLabel?: string;
+  servesPersons?: number;
+  foodModifiers?: SelectedFoodModifier[];
+  preparationNotes?: string;
 }
 
 export interface Category {
@@ -67,6 +145,16 @@ export interface Category {
   count?: number;
   isFeatured?: boolean;
   seo?: ProductSEO;
+  /** Which main menu tab this category is listed under. Defaults to bakery. */
+  menuGroup?: MenuGroup;
+  /** When false, products in this category cannot be opened, added to the cart or ordered. Defaults to true. */
+  checkoutEnabled?: boolean;
+  /** Position of this category's carousel on the home page; null means it is not featured there. */
+  homeFeaturedOrder?: number | null;
+  /** Home carousel heading; falls back to the category name. */
+  homeTitle?: string;
+  /** Short line under the home carousel heading. */
+  homeDescription?: string;
 }
 
 export interface WooCommerceCategory {
@@ -89,12 +177,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedPrice: number;
-  customizations?: {
-    cakeType?: string;
-    weight?: string;
-    deliveryDate?: string;
-    message?: string;
-  };
+  customizations?: CartItemCustomizations;
 }
 
 export type OrderStatus = 
@@ -122,12 +205,9 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image: string;
-  customizations?: {
-    cakeType?: string;
-    weight?: string;
-    deliveryDate?: string;
-    message?: string;
-  };
+  productType?: MenuGroup;
+  comboItems?: ComboItem[];
+  customizations?: CartItemCustomizations;
 }
 
 export interface OrderTrackingStep {
@@ -145,7 +225,14 @@ export interface Order {
   customerEmail: string;
   customerPhone: string;
   pickupBranch: string;
+  pickupPerson?: PickupPerson;
+  billingAddress?: Address;
   shippingAddress?: Address;
+  deliveryDate?: string;
+  deliveryTime?: string;
+  orderMode?: 'asap' | 'scheduled';
+  requestedFulfillmentAt?: string;
+  orderType?: 'bakery' | 'food' | 'mixed';
   items: OrderItem[];
   subtotal: number;
   tax: number;
@@ -155,6 +242,9 @@ export interface Order {
   total: number;
   paymentMethod: PaymentMethod;
   paymentStatus: 'paid' | 'unpaid' | 'refunded';
+  /** Online gateway transaction id (Dialog Genie). */
+  paymentReference?: string;
+  paidAt?: string;
   bankReceiptUrl?: string;
   status: OrderStatus;
   orderNotes?: string;
@@ -209,18 +299,94 @@ export interface HeroSlide {
   order: number;
 }
 
+export interface SocialPlatformSetting { enabled: boolean; url: string; }
+export interface DeliveryAreaSetting { name: string; charge: number; postalCodes: string[]; }
+
 export interface GeneralSettings {
-  storeName: string;
-  storeTagline: string;
-  storeEmail: string;
-  storePhone: string;
-  storeAddress: string;
-  currencySymbol: string;
-  maintenanceMode: boolean;
-  logoUrl?: string;
-  taxRatePercent: number;
-  flatShippingFee: number;
-  freeShippingThreshold: number;
+  identity: {
+    siteTitle: string; tagline: string; logoUrl: string; darkLogoUrl: string;
+    mobileLogoUrl: string; faviconUrl: string; placeholderProductImageUrl: string; browserThemeColor: string;
+  };
+  business: {
+    name: string; registrationNumber: string; address: string; primaryPhone: string;
+    secondaryPhone: string; whatsappNumber: string; supportEmail: string;
+    orderNotificationEmail: string; googleMapsUrl: string; openingHours: string;
+  };
+  header: {
+    announcementText: string; announcementEnabled: boolean; logoSize: number; sticky: boolean;
+    searchEnabled: boolean; wishlistEnabled: boolean; accountEnabled: boolean; cartEnabled: boolean;
+  };
+  footer: {
+    description: string; logoUrl: string; copyrightText: string; showContactDetails: boolean;
+    newsletterEnabled: boolean; paymentMethodLogos: string[]; quickLinks: Array<{ label: string; url: string }>;
+    privacyPolicyUrl: string; termsUrl: string; refundPolicyUrl: string; deliveryPolicyUrl: string;
+  };
+  social: Record<'facebook' | 'instagram' | 'tiktok' | 'youtube' | 'whatsapp' | 'linkedin', SocialPlatformSetting>;
+  store: {
+    currency: string; currencySymbol: string; symbolPosition: 'before' | 'after'; decimalPlaces: number;
+    taxPercentage: number; pricesIncludeTax: boolean; minimumOrderAmount: number; maximumOrderAmount: number;
+    guestCheckout: boolean; couponsEnabled: boolean; reviewsEnabled: boolean; wishlistEnabled: boolean;
+    allowOutOfStockOrdering: boolean; lowStockThreshold: number; defaultProductSorting: string; productsPerPage: number;
+    /** Main menu tabs shown on the storefront. A switched-off tab is hidden and its products cannot be ordered. */
+    bakeryMenuEnabled: boolean; foodMenuEnabled: boolean; comboMenuEnabled: boolean;
+  };
+  delivery: {
+    enabled: boolean; storePickupEnabled: boolean; defaultFee: number; freeDeliveryMinimum: number;
+    areas: DeliveryAreaSetting[]; estimatedTime: string; instructions: string;
+    maximumDistanceKm: number; postalCodeCheckEnabled: boolean;
+  };
+  foodOrdering: {
+    enabled: boolean; allowAsap: boolean; allowScheduled: boolean;
+    openingDays: number[]; openTime: string; closeTime: string; lastOrderTime: string;
+    defaultPreparationMinutes: number; asapBufferMinutes: number; scheduledSlotMinutes: number;
+    maximumOrdersPerSlot: number; temporarilyClosed: boolean; closedMessage: string;
+  };
+  orders: {
+    numberPrefix: string; defaultStatus: OrderStatus; availableStatuses: OrderStatus[];
+    automaticallyReduceStock: boolean; cancellationTimeLimitMinutes: number; customerNotesEnabled: boolean;
+    adminNewOrderNotifications: boolean; customerConfirmationNotifications: boolean;
+  };
+  payments: {
+    cashOnDeliveryEnabled: boolean; bankTransferEnabled: boolean; bankAccountInformation: string;
+    payHereEnabled: boolean; payHereMerchantId: string; payHereEnvironment: 'sandbox' | 'live';
+    dialogGenieEnabled: boolean; dialogGenieMerchantId: string; dialogGenieEnvironment: 'sandbox' | 'live';
+    /** LKR per 1 unit of the store currency; Genie charges in rupees. Unused when the store currency is LKR. */
+    dialogGenieExchangeRate: number;
+    stripeEnabled: boolean; instructions: string;
+  };
+  contact: {
+    pageHeading: string; pageDescription: string; formRecipientEmail: string;
+    whatsappButtonEnabled: boolean; whatsappDefaultMessage: string; supportPhone: string;
+    emailNotificationsEnabled: boolean; smsNotificationsEnabled: boolean;
+  };
+  seo: {
+    defaultTitle: string; metaDescription: string; metaKeywords: string; openGraphImageUrl: string;
+    canonicalUrl: string; googleAnalyticsId: string; googleTagManagerId: string;
+    metaPixelId: string; searchEngineIndexing: boolean;
+  };
+  // The home page lists the bakery and food menu categories; combos are menu-tab only.
+  homepage: {
+    heroEnabled: boolean; categoryShowcaseEnabled: boolean;
+    promotionalBannerEnabled: boolean; testimonialsEnabled: boolean; newsletterEnabled: boolean;
+    /** Artwork for the three major-category cards. Empty falls back to a category or product photo. */
+    bakeryCardImageUrl: string; foodCardImageUrl: string; comboCardImageUrl: string;
+  };
+  /** Storefront pages that can be switched off. Home is always on. */
+  pages: {
+    menuEnabled: boolean; promotionsEnabled: boolean; branchesEnabled: boolean; trackOrderEnabled: boolean;
+    privacyPolicyEnabled: boolean; termsEnabled: boolean; refundPolicyEnabled: boolean;
+  };
+  /** The floating chat assistant, answered by Claude on the server. */
+  assistant: { enabled: boolean; name: string; welcomeMessage: string };
+  appearance: {
+    primaryColor: string; secondaryColor: string; accentColor: string; buttonColor: string;
+    headingFont: string; bodyFont: string; borderRadius: number; mode: 'light' | 'dark' | 'system'; customCss: string;
+  };
+  system: {
+    maintenanceMode: boolean; maintenanceMessage: string; maintenanceImageUrl: string;
+    allowAdminDuringMaintenance: boolean; timezone: string; dateFormat: string; timeFormat: string;
+    defaultLanguage: string; lastUpdatedAt?: string; lastUpdatedBy?: string;
+  };
 }
 
 export interface EmailSettings {

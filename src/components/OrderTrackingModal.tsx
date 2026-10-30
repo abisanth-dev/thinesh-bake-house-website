@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Search, Package, Clock, CheckCircle2, MapPin, Truck, AlertCircle, ShoppingBag, PhoneCall } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
+import { useSiteSettings } from './SiteSettingsContext';
+import { formatMoney } from '../siteSettings';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -10,6 +12,8 @@ interface OrderTrackingModalProps {
 }
 
 export default function OrderTrackingModal({ isOpen, onClose, initialOrderNumber = '' }: OrderTrackingModalProps) {
+  const settings = useSiteSettings();
+  const money = (value: number) => formatMoney(value, settings);
   const [orderQuery, setOrderQuery] = useState(initialOrderNumber);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +51,7 @@ export default function OrderTrackingModal({ isOpen, onClose, initialOrderNumber
       case 'out_for_delivery':
         return <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Truck className="w-3.5 h-3.5" /> Out for Delivery</span>;
       case 'processing':
-        return <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Clock className="w-3.5 h-3.5 animate-spin" /> Baking & Preparing</span>;
+        return <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Clock className="w-3.5 h-3.5 animate-spin" /> {order?.orderType === 'food' ? 'Preparing Food' : order?.orderType === 'mixed' ? 'Preparing Full Order' : 'Baking & Preparing'}</span>;
       case 'cancelled':
         return <span className="bg-rose-100 text-rose-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> Cancelled</span>;
       default:
@@ -74,7 +78,7 @@ export default function OrderTrackingModal({ isOpen, onClose, initialOrderNumber
               </div>
               <div>
                 <h3 className="text-xl font-bold font-display tracking-tight">Track Your Oven Order</h3>
-                <p className="text-xs text-indigo-200">Real-time status updates from Thinesh Bake House kitchen</p>
+                <p className="text-xs text-indigo-200">One timeline for bakery, cakes and freshly prepared food</p>
               </div>
             </div>
             <button
@@ -132,6 +136,7 @@ export default function OrderTrackingModal({ isOpen, onClose, initialOrderNumber
                   <div>
                     {getStatusBadge(order.status)}
                   </div>
+                  <div className="w-full border-t border-amber-100 pt-3 text-xs text-amber-950 sm:w-auto sm:border-0 sm:pt-0"><span className="font-bold uppercase">{order.orderType || 'bakery'} order</span><span className="ml-2 text-amber-800">{order.orderMode === 'asap' ? 'ASAP' : 'Scheduled'}{order.requestedFulfillmentAt ? ` · ${new Date(order.requestedFulfillmentAt).toLocaleString('en-LK', { timeZone: 'Asia/Colombo', dateStyle: 'medium', timeStyle: 'short' })}` : ''}</span></div>
                 </div>
 
                 {/* Progress Steps Timeline */}
@@ -173,9 +178,11 @@ export default function OrderTrackingModal({ isOpen, onClose, initialOrderNumber
                         <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
                         <div className="flex-1 min-w-0">
                           <h5 className="font-semibold text-gray-900 truncate">{item.name}</h5>
-                          <span className="text-xs text-gray-500">Qty: {item.quantity} × Rs. {item.price}</span>
+                          <span className="text-xs text-gray-500">Qty: {item.quantity} × {money(item.price)}</span>
+                          {item.customizations?.variantLabel && <span className="block text-[10px] text-stone-500">{item.customizations.variantLabel}</span>}
+                          {item.customizations?.foodModifiers?.map(modifier => <span key={`${modifier.groupId}-${modifier.optionId}`} className="block text-[10px] text-stone-500">{modifier.groupName}: {modifier.optionName}</span>)}
                         </div>
-                        <span className="font-bold font-mono text-brand-blue">Rs. {item.quantity * item.price}</span>
+                        <span className="font-bold font-mono text-brand-blue">{money(item.quantity * item.price)}</span>
                       </div>
                     ))}
                   </div>
