@@ -1,0 +1,56 @@
+# Builds the site and publishes it to the `deploy` branch, which the cPanel server (tbhweb, tbh.lk)
+# checks out and runs with Passenger. The server account can't run `npm install` (shell limits), so
+# the server is bundled with all its packages into one file here. scripts/cpanel-update.sh, run by a
+# cPanel cron job, pulls each new build and restarts the app.
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-cpanel
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build storefront
+        run: npx vite build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Bundle server with its dependencies
+        run: npx esbuild server.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/server.cjs
+
+      - name: Assemble deploy folder
+        run: |
+          mkdir -p out
+          cp -r dist out/
+          cp scripts/cpanel-update.sh out/update.sh
+          printf '{ "name": "tbh-app", "private": true }\n' > out/package.json
+          printf "require('./dist/server.cjs');\n" > out/app.js
+          printf '.env\ntmp/\nupdate.log\n' > out/.gitignore
+
+      - name: Publish to deploy branch
+        working-directory: out
+        run: |
+          git init -q -b deploy
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Build ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" deploy
