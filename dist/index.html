@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thinesh Bake House - Your Favourite Baker Since 1982</title>
+    <style>
+      /* Branded loading screen, shown before the app's code arrives; removed by src/bootLoader.ts. */
+      #boot-loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fafaf9; font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; transition: opacity 0.35s ease; }
+      #boot-loader.bl-hide { opacity: 0; pointer-events: none; }
+      #boot-loader .bl-mark { position: relative; width: 96px; height: 96px; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; }
+      #boot-loader .bl-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(11, 19, 84, 0.1); border-top-color: #e5a823; animation: bl-spin 0.9s linear infinite; }
+      #boot-loader img { width: 68px; height: 68px; border-radius: 50%; object-fit: contain; }
+      #boot-loader .bl-name { margin: 0; font-size: 15px; font-weight: 800; color: #0b1354; letter-spacing: -0.01em; }
+      #boot-loader .bl-tag { margin: 0; font-size: 10px; font-weight: 600; color: #a8a29e; letter-spacing: 0.22em; text-transform: uppercase; }
+      @keyframes bl-spin { to { transform: rotate(360deg); } }
+    </style>
+    <script type="module" crossorigin src="/assets/index-ByeZyFiz.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DorXAnCb.css">
+  </head>
+  <body>
+    <div id="boot-loader" role="status" aria-label="Loading">
+      <div class="bl-mark">
+        <span class="bl-ring"></span>
+        <img src="https://tbh.lk/wp-content/uploads/2026/02/TBH-Logo-1024x1024-1.png" alt="" />
+      </div>
+      <p class="bl-name">Thinesh Bake House</p>
+      <p class="bl-tag">Freshly baked since 1982</p>
+    </div>
+    <div id="root"></div>
+  </body>
+</html>
